@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css"
+      type="text/css"
+    />
+    <style>
+      #map {
+        height: 800px;
+        width: 100%;
+      }
+      body {
+        font-family: sans-serif;
+        text-align: center;
+      }
+    </style>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPS App</title>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+  </head>
+  <body>
+    <h2>gpsApp</h2>
+    <div id="map"></div>
+    <script>
+        
+      //basiskaart component
+      var map = new ol.Map({
+        target: "map",
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM(),
+          }),
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([5.24, 52.26]),
+          zoom: 4,
+        }),
+      });
+
+       //stijl punten
+       var puntStyle = new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 5,
+          fill: new ol.style.Fill({ color: "red" }),
+          stroke: new ol.style.Stroke({
+            color: "white",
+            width: 1,
+          }),
+        }),
+      });
+
+      //Brussel
+      var layer = new ol.layer.Vector({
+        style: puntStyle,
+        source: new ol.source.Vector({
+          features: [
+            new ol.Feature({
+              geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([4.35247, 50.84673])
+              ),
+            }),
+          ],
+        }),
+      });
+      map.addLayer(layer);
+
+      //Rome
+      var layer2 = new ol.layer.Vector({
+          style:puntStyle,
+        source: new ol.source.Vector({
+          features: [
+            new ol.Feature({
+              geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([12.485475, 41.889407])
+              ),
+            }),
+          ],
+        }),
+      });
+      map.addLayer(layer2);
+
+      //jouw positie plotten
+      navigator.geolocation.getCurrentPosition(instellen);
+
+      function instellen(positie) {
+        console.log("we gaan instellen");
+
+        var lengteGraad = positie.coords.longitude;
+        var breedteGraad = positie.coords.latitude;
+
+        console.log(lengteGraad + " en " + breedteGraad);
+        var jouwPositie = new ol.layer.Vector({
+          style: puntStyle,
+          source: new ol.source.Vector({
+            features: [
+              new ol.Feature({
+                geometry: new ol.geom.Point(
+                  ol.proj.fromLonLat([lengteGraad, breedteGraad])
+                ),
+              }),
+            ],
+          }),
+        });
+        map.addLayer(jouwPositie);
+      }
+    </script>
+  </body>
+</html>

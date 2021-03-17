@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+    <style>
+      #map, body {
+        height: 800px;
+        width: 100%;
+        font-family: sans-serif;
+        text-align: center;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+    <title>gpsApp</title>
+  </head>
+  <body>
+    <h2>gpsApp</h2>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+      //1 Zet een HTML pagina
+      //2 Script uiteenzetten
+      //3 Open Layers - uitleggen wat dat is, en script link + style link toevoegen
+      //4 Style map aangeven hoogte + breedte
+      //5 Kaart aanmaken (var map = new ol.Map) -> run zonder en met view
+      //6 Hardcodeer een punt op de kaart
+      //7 Geolocation om je eigen huis op de kaart te plotten <- Einde
+      //8 gebruik de Open Notify API met een xmlhttprequest om de ISS lengtegraad en breedtegraad coordinaten op te halen in JSON object
+      //9 Schrijf een functie om lengtegraad en breedtegraad variabelen uit het JSON object te peuteren
+      //10 Vul de functie aan om de lengte/breedte graad in een marker te stoppen en op de kaart te plotten
+      //11********************* eventueel: maak een stijl voor de punten
+
+      //Todo - iedere stap in 'runnable stapjes' in commits op Github!
+
+      //Stap 5 - tover de kaart op het scherm
+      var map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([5.24, 52.26]),
+          zoom: 4
+        })
+      });
+
+      //Stap 6 - Maak een eerste marker (hard coded Lengtegraad en breedtegraad)
+      var layer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          features: [
+            new ol.Feature({
+              geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([4.35247, 50.84673])
+              ),
+            }),
+          ],
+        }),        
+      });
+      map.addLayer(layer);
+
+      // //7 - gebruik van de GeoLocation functie om je huis op de kaart te plotten
+      navigator.geolocation.getCurrentPosition(instellen, foutMelding);
+
+      function instellen(pos) {
+        var longitude = pos.coords.longitude;
+        var latitude = pos.coords.latitude;
+        var huisLayer = new ol.layer.Vector({
+          source: new ol.source.Vector({
+            features: [
+              new ol.Feature({
+                geometry: new ol.geom.Point(
+                  ol.proj.fromLonLat([longitude, latitude])
+                ),
+              }),
+            ],
+          }),
+        });
+        map.addLayer(huisLayer);
+      }
+
+      // //eventueel foutmelding catchen...hoeft niet
+      function foutMelding(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+      }
+
+      // 8 - Open Notify ISS API JSON binnenhalen
+      var xmlhttp = new XMLHttpRequest();
+      var url = "http://api.open-notify.org/iss-now.json";
+
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          issData = JSON.parse(this.responseText);
+          console.log("hier issdata: " + issData);
+          issCoordinaten(issData);
+        }
+      };
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+
+      //9 - Functie ISS coordinaten uit JSON object peuteren
+      function issCoordinaten(data) {
+        var issLat = issData["iss_position"]["latitude"];
+        var issLon = issData["iss_position"]["longitude"];
+        console.log(issLat + " en " + issLon);
+
+        //10 - ISS coordinaten in marker stoppen en plotten
+        var layerISS = new ol.layer.Vector({
+          source: new ol.source.Vector({
+            features: [
+              new ol.Feature({
+                geometry: new ol.geom.Point(
+                  ol.proj.fromLonLat([issLon, issLat])
+                ),
+              }),
+            ],
+          }),
+        });
+        map.addLayer(layerISS);
+      }
+
+      // //11 punt maken met style
+      // var puntStyle = new ol.style.Style({
+      //   image: new ol.style.Circle({
+      //     radius: 5,
+      //     fill: new ol.style.Fill({ color: "red" }),
+      //     stroke: new ol.style.Stroke({
+      //       color: "white",
+      //       width: 1,
+      //     }),
+      //   }),
+      // });
+
+      // var layerRome = new ol.layer.Vector({
+      //   source: new ol.source.Vector({
+      //     features: [
+      //       new ol.Feature({
+      //         geometry: new ol.geom.Point(
+      //           ol.proj.fromLonLat([12.485475, 41.889407])
+      //         ),
+      //       }),
+      //     ],
+      //   }),
+      //   style: puntStyle        
+      // });
+      // map.addLayer(layerRome);
+
+    </script>   
+  </body>
+</html>

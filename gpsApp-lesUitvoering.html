@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css"
+      type="text/css"
+    />
+    <style>
+        body{
+            font-family:sans-serif;
+            text-align: center;
+        }
+
+        #map {
+            height: 800px;
+            width: 100%;
+            border: 2px solid red;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gpsApp</title>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+</head>
+<body>
+    <h1>gpsApp</h1>
+    <div id="map"></div>
+    <script>
+
+        //basiskaart
+        var kaart = new ol.Map({
+            target: "map",
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM(),
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([5.24, 52.26]),
+                zoom: 3
+            })
+        });
+
+        //stijl punten
+        var puntStyle = new ol.style.Style({
+            image: new ol.style.Circle({
+               radius: 5,
+               fill: new ol.style.Fill({ color: "red"}),
+               stroke: new ol.style.Stroke({
+                   color: "black",
+                   width: 2,
+               }),  
+            }),
+        });
+
+        //punt Brussel
+        var laagBrussel = new ol.layer.Vector({
+            style: puntStyle,
+            source: new ol.source.Vector({
+                features: [
+                    new ol.Feature({
+                        geometry: new ol.geom.Point(
+                        ol.proj.fromLonLat([4.35247, 50.84673])
+                        ),
+                    }),
+                ],                
+            }),
+        });
+        kaart.addLayer(laagBrussel);
+
+         //punt Rome
+         var laagRome = new ol.layer.Vector({
+            style: puntStyle,
+            source: new ol.source.Vector({
+                features: [
+                    new ol.Feature({
+                        geometry: new ol.geom.Point(
+                        ol.proj.fromLonLat([12.485475, 41.889407])
+                        ),
+                    }),
+                ],                
+            }),
+        });
+        kaart.addLayer(laagRome);
+
+        //positie plotten
+        navigator.geolocation.getCurrentPosition(instellen);
+
+        function instellen(positie){
+            console.log("Ik ben nu aan het instellen");
+
+            var lengteGraad = positie.coords.longitude;
+            var breedteGraad = positie.coords.latitude;
+            console.log("Dit is de lengtegraad : " + lengteGraad);
+            console.log("Dit is de breedtegraad : " + breedteGraad);
+            
+            var jouwPositie = new ol.layer.Vector({
+                style: puntStyle,
+                source: new ol.source.Vector({
+                    features: [
+                        new ol.Feature({
+                            geometry: new ol.geom.Point(
+                                ol.proj.fromLonLat([lengteGraad, breedteGraad])
+                            ),
+                        }),
+                    ],
+                }),
+            });
+            kaart.addLayer(jouwPositie);
+        }
+
+        //ISS plotten
+        var xmlhttp = new XMLHttpRequest();
+        var url = "http://api.open-notify.org/iss-now.json";
+
+        xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          issData = JSON.parse(this.responseText);
+          console.log("hier issdata: " + issData);
+          issCoordinaten(issData);
+        }
+      };
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+
+      // functie JSON naar Lengte en Breedtegraadvariabelen
+      function issCoordinaten(data) {
+        var issLat = issData["iss_position"]["latitude"];
+        var issLon = issData["iss_position"]["longitude"];
+        console.log("Dit zijn de coordinaten van ISS : " + issLat + " en " + issLon);
+      
+
+      //10 - ISS coordinaten in marker stoppen en plotten
+      var layerISS = new ol.layer.Vector({
+          style:puntStyle,
+          source: new ol.source.Vector({
+            features: [
+              new ol.Feature({
+                geometry: new ol.geom.Point(
+                  ol.proj.fromLonLat([issLon, issLat])
+                ),
+              }),
+            ],
+          }),
+        });
+        kaart.addLayer(layerISS);
+    }
+      
+
+
+
+
+
+    </script>
+</body>
+</html>
